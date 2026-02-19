@@ -7,10 +7,13 @@ import { Button } from "@/components/ui/button"
 import { format, differenceInDays } from "date-fns"
 import { Calendar, Users, MapPin, DollarSign, Sparkles, Loader2 } from "lucide-react"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
+import Image from "next/image"
 
 export function WizardSummary() {
   const { tripData, resetWizard } = useWizard()
   const [isGenerating, setIsGenerating] = useState(false)
+  const router = useRouter()
 
   const tripLength = tripData.arrivalDate && tripData.departureDate
     ? differenceInDays(tripData.departureDate, tripData.arrivalDate)
@@ -28,11 +31,35 @@ export function WizardSummary() {
 
   const handleGenerateItinerary = () => {
     setIsGenerating(true)
-    // TODO: Implement itinerary generation
-    setTimeout(() => {
-      setIsGenerating(false)
-      alert('Itinerary generation coming soon! Your trip data has been captured.')
-    }, 2000)
+    
+    // Transform wizard data into API format
+    const apiData = {
+      experience: "first-time", // Default for now
+      vibe: tripStyle?.name || "Balanced",
+      days: `${tripLength} days`,
+      timing: tripData.arrivalDate ? format(tripData.arrivalDate, "MMMM yyyy") : "Flexible",
+      groupSize: tripData.adults + tripData.children.length,
+      ages: [
+        ...Array(tripData.adults).fill("Adults (18-64)"),
+        ...tripData.children.map(c => {
+          if (c.age <= 2) return "Infants (0-2)"
+          if (c.age <= 4) return "Toddlers (3-4)"
+          if (c.age <= 8) return "Young kids (5-8)"
+          if (c.age <= 12) return "Tweens (9-12)"
+          return "Teenagers (13-17)"
+        })
+      ],
+      parks: selectedParkNames,
+      crowds: "Somewhat — open to strategies",
+      dining: ["Quick service / casual"],
+      accommodation: "Off-site vacation rental (Kissimmee/Orlando area)",
+      budget: budgetTier?.price || "$4,000 - $7,000",
+      mustDos: mustDoNames,
+    }
+    
+    // Encode and redirect to results page
+    const encodedData = encodeURIComponent(JSON.stringify(apiData))
+    router.push(`/results?data=${encodedData}`)
   }
 
   return (
@@ -141,6 +168,23 @@ export function WizardSummary() {
         </Card>
       </div>
 
+      {/* Katie intro */}
+      <div className="flex items-center gap-4 p-4 bg-primary/5 rounded-lg">
+        <Image
+          src="/katie-avatar.png"
+          alt="Katie"
+          width={60}
+          height={60}
+          className="rounded-full"
+        />
+        <div>
+          <p className="font-medium">Meet Katie, your AI trip planner</p>
+          <p className="text-sm text-muted-foreground">
+            I'll create a personalized day-by-day itinerary based on your preferences.
+          </p>
+        </div>
+      </div>
+
       {/* Actions */}
       <div className="flex flex-col sm:flex-row gap-4">
         <Button 
@@ -152,10 +196,10 @@ export function WizardSummary() {
           {isGenerating ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Generating...
+              Katie is planning...
             </>
           ) : (
-            'Generate My Itinerary'
+            'Ask Katie to Plan My Trip'
           )}
         </Button>
         <Button 
@@ -168,7 +212,7 @@ export function WizardSummary() {
       </div>
 
       <p className="text-xs text-center text-muted-foreground">
-        Itinerary generation is coming soon. Your preferences have been saved.
+        Katie uses AI to create personalized itineraries based on real Orlando expertise.
       </p>
     </div>
   )
