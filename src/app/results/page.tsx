@@ -189,15 +189,73 @@ export default function ResultsPage() {
 
       {/* Itinerary Content */}
       <div className="container py-8 max-w-4xl">
-        <Card className="shadow-lg border-pink-100">
-          <CardContent className="p-6 md:p-10 prose prose-slate max-w-none prose-headings:text-gray-800 prose-h2:text-pink-600 prose-a:text-pink-600">
-            <ReactMarkdown>{itinerary || ""}</ReactMarkdown>
+        <Card className="shadow-lg border-pink-100 overflow-hidden">
+          <CardContent className="p-6 md:p-10">
+            <article className="prose prose-lg prose-slate max-w-none
+              prose-headings:font-bold
+              prose-h1:text-3xl prose-h1:text-gray-900 prose-h1:border-b prose-h1:pb-4 prose-h1:mb-6
+              prose-h2:text-2xl prose-h2:text-pink-600 prose-h2:mt-8 prose-h2:mb-4 prose-h2:border-b prose-h2:border-pink-100 prose-h2:pb-2
+              prose-h3:text-xl prose-h3:text-gray-800 prose-h3:mt-6 prose-h3:mb-3
+              prose-p:text-gray-700 prose-p:leading-relaxed
+              prose-ul:my-4 prose-ul:space-y-2
+              prose-li:text-gray-700
+              prose-strong:text-gray-900 prose-strong:font-semibold
+              prose-a:text-pink-600 prose-a:no-underline hover:prose-a:underline
+              prose-blockquote:border-l-pink-400 prose-blockquote:bg-pink-50 prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:rounded-r-lg prose-blockquote:not-italic
+              prose-hr:border-pink-100
+              [&>*:first-child]:mt-0
+            ">
+              <ReactMarkdown
+                components={{
+                  // Custom heading styling
+                  h1: ({ children }) => (
+                    <h1 className="flex items-center gap-3">
+                      <span className="text-3xl">🏰</span>
+                      {children}
+                    </h1>
+                  ),
+                  // Add emoji icons to day headers
+                  h2: ({ children }) => {
+                    const text = String(children);
+                    const dayMatch = text.match(/Day\s*(\d+)/i);
+                    const emoji = dayMatch ? ['🌅', '☀️', '🌴', '🎢', '🎡', '🌙', '✨'][Number(dayMatch[1]) - 1] || '📅' : '📍';
+                    return (
+                      <h2 className="flex items-center gap-2">
+                        <span>{emoji}</span>
+                        {children}
+                      </h2>
+                    );
+                  },
+                  // Style tips/callouts
+                  blockquote: ({ children }) => (
+                    <div className="bg-gradient-to-r from-orange-50 to-pink-50 border-l-4 border-pink-400 p-4 rounded-r-lg my-4">
+                      <div className="flex gap-2 items-start">
+                        <span className="text-pink-500 font-bold">💡</span>
+                        <div className="text-gray-700">{children}</div>
+                      </div>
+                    </div>
+                  ),
+                  // Style lists better
+                  ul: ({ children }) => (
+                    <ul className="space-y-2 my-4">{children}</ul>
+                  ),
+                  li: ({ children }) => (
+                    <li className="flex gap-2 items-start">
+                      <span className="text-pink-500 mt-1">•</span>
+                      <span>{children}</span>
+                    </li>
+                  ),
+                }}
+              >
+                {itinerary || ""}
+              </ReactMarkdown>
+            </article>
           </CardContent>
         </Card>
 
         {/* Katie sign-off */}
         <div className="mt-8 text-center">
-          <div className="inline-flex items-center gap-3 bg-gradient-to-r from-orange-100 to-pink-100 rounded-full px-6 py-3">
+          <div className="inline-flex items-center gap-3 bg-gradient-to-r from-orange-100 to-pink-100 rounded-full px-6 py-3 shadow-sm">
             <Image
               src="/katie-avatar.png"
               alt="Katie"
