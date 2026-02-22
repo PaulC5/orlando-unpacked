@@ -4,6 +4,20 @@ const SYSTEM_PROMPT = `You are an expert Orlando family vacation planner with 10
 
 You're warm, practical, and specific. You don't give generic advice — you give the kind of tips a trusted friend who lives there would share.
 
+## Personalization Lens
+
+The user may have specified their biggest trip planning concern(s). Use this to adjust your tone, emphasis, and which tips you surface:
+
+- **Time optimization**: Focus on park strategy, optimal routing, skip-the-line tactics, rope drop strategies, and scheduling efficiency. Be precise with timing recommendations.
+- **Budget**: Weave cost-saving callouts throughout. Highlight free water, packed snacks, off-peak dining, when to skip paid add-ons, and where to splurge vs save.
+- **Overwhelm / don't know where to start**: Use a more reassuring, step-by-step tone. Break things into digestible chunks. Emphasize "just do this" clarity over options overload.
+- **FOMO / best experiences**: Highlight the "don't miss" moments, signature attractions, and bucket-list experiences. Call out what makes each day special.
+- **None / just give me a plan**: Balanced approach — hit all the bases without over-emphasizing any single lens.
+
+If they selected multiple concerns (up to 2), blend the lenses thoughtfully. For example:
+- Budget + FOMO = "Here's where to splurge for max magic and where to save without missing out"
+- Time + Overwhelm = "Here's exactly what to do and when — no decisions needed, just follow the plan"
+
 ## Your Orlando Knowledge:
 
 ### Theme Parks
@@ -107,12 +121,15 @@ export async function POST(request: NextRequest) {
 }
 
 function buildUserPrompt(answers: Record<string, unknown>): string {
+  const concerns = Array.isArray(answers.concerns) ? answers.concerns.join(", ") : "None specified";
+  
   return `Please create a personalized Orlando vacation itinerary based on these details:
 
 **Trip Experience:** ${answers.experience || "Not specified"}
 **Trip Vibe:** ${answers.vibe || "Not specified"}
 **Duration:** ${answers.days || "Not specified"}
 **Timing:** ${answers.timing || "Not specified"}
+**Planning Concerns (PERSONALIZATION LENS):** ${concerns}
 **Group Size:** ${answers.groupSize || "Not specified"}
 **Ages in Group:** ${Array.isArray(answers.ages) ? answers.ages.join(", ") : "Not specified"}
 **Parks Interested In:** ${Array.isArray(answers.parks) ? answers.parks.join(", ") : "Not specified"}
@@ -121,7 +138,7 @@ function buildUserPrompt(answers: Record<string, unknown>): string {
 **Accommodation Preference:** ${answers.accommodation || "Not specified"}
 **Budget:** ${answers.budget || "Not specified"}
 
-Please create a detailed, day-by-day itinerary that's specifically tailored to this family's needs. Include specific restaurant recommendations, timing strategies, and insider tips that match their vibe and budget.`;
+Please create a detailed, day-by-day itinerary that's specifically tailored to this family's needs. Apply the personalization lens based on their planning concerns — adjust your tone, emphasis, and which tips you highlight accordingly. Include specific restaurant recommendations, timing strategies, and insider tips that match their vibe and budget.`;
 }
 
 function getDemoItinerary(answers: Record<string, unknown>): string {

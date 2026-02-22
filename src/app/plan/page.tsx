@@ -46,6 +46,20 @@ const questions = [
     ],
   },
   {
+    id: "concerns",
+    section: "Your Priorities",
+    question: "What's your biggest trip planning concern? (Pick up to 2)",
+    type: "multi-limited",
+    maxSelections: 2,
+    options: [
+      "⏰ Time optimization — make every minute count",
+      "💰 Budget — get the most bang for my buck",
+      "😵 Overwhelm — I don't know where to start",
+      "✨ FOMO — don't want to miss the best stuff",
+      "🤷 None of these — just give me a solid plan",
+    ],
+  },
+  {
     id: "groupSize",
     section: "Your Group",
     question: "How many people are in your crew?",
@@ -162,18 +176,28 @@ export default function PlanPage() {
     }, 300);
   };
 
-  const handleMultiSelect = (option: string) => {
+  const handleMultiSelect = (option: string, maxSelections?: number) => {
     const current = (answers[currentQuestion.id] as string[]) || [];
     if (current.includes(option)) {
+      // Allow deselection
       setAnswers({
         ...answers,
         [currentQuestion.id]: current.filter((o) => o !== option),
       });
     } else {
-      setAnswers({
-        ...answers,
-        [currentQuestion.id]: [...current, option],
-      });
+      // Check if we've hit the max for limited multi-select
+      if (maxSelections && current.length >= maxSelections) {
+        // Replace the oldest selection with the new one
+        setAnswers({
+          ...answers,
+          [currentQuestion.id]: [...current.slice(1), option],
+        });
+      } else {
+        setAnswers({
+          ...answers,
+          [currentQuestion.id]: [...current, option],
+        });
+      }
     }
   };
 
@@ -201,6 +225,10 @@ export default function PlanPage() {
     // Navigate to results page where we'll generate the itinerary
     router.push("/results");
   };
+
+  // Check if current question is multi-limited type
+  const isMultiLimited = currentQuestion.type === "multi-limited";
+  const maxSelections = isMultiLimited ? (currentQuestion as { maxSelections?: number }).maxSelections || 2 : undefined;
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-orange-400 via-pink-500 to-purple-600 py-8">
@@ -285,9 +313,14 @@ export default function PlanPage() {
               </div>
             )}
 
-            {/* Multi select options */}
-            {currentQuestion.type === "multi" && (
+            {/* Multi select options (regular and limited) */}
+            {(currentQuestion.type === "multi" || currentQuestion.type === "multi-limited") && (
               <>
+                {isMultiLimited && (
+                  <p className="text-sm text-gray-500 mb-4">
+                    Select up to {maxSelections} — I&apos;ll tailor your plan based on what matters most to you.
+                  </p>
+                )}
                 <div className="space-y-3" role="group" aria-labelledby="question-heading">
                   {currentQuestion.options.map((option) => {
                     const selected = (
@@ -296,7 +329,7 @@ export default function PlanPage() {
                     return (
                       <button
                         key={option}
-                        onClick={() => handleMultiSelect(option)}
+                        onClick={() => handleMultiSelect(option, maxSelections)}
                         role="checkbox"
                         aria-checked={selected}
                         className={`w-full text-left p-4 rounded-xl border-2 transition-all focus:outline-none focus:ring-2 focus:ring-pink-500 text-gray-800 font-medium ${
