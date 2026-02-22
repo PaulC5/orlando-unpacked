@@ -1,4 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
+import { supabaseAdmin, WizardSubmission } from "@/lib/supabase";
+
+// Save submission to Supabase
+async function saveSubmission(answers: Record<string, unknown>) {
+  try {
+    const submission: WizardSubmission = {
+      email: String(answers.email || ""),
+      experience: String(answers.experience || ""),
+      vibe: String(answers.vibe || ""),
+      days: String(answers.days || ""),
+      timing: String(answers.timing || ""),
+      concerns: Array.isArray(answers.concerns) ? answers.concerns : [],
+      group_size: String(answers.groupSize || ""),
+      ages: Array.isArray(answers.ages) ? answers.ages : [],
+      parks: Array.isArray(answers.parks) ? answers.parks : [],
+      crowds: String(answers.crowds || ""),
+      dining: Array.isArray(answers.dining) ? answers.dining : [],
+      accommodation: String(answers.accommodation || ""),
+      budget: String(answers.budget || ""),
+    };
+
+    const { error } = await supabaseAdmin
+      .from("submissions")
+      .insert([submission]);
+
+    if (error) {
+      console.error("Supabase insert error:", error);
+    }
+  } catch (err) {
+    console.error("Error saving submission:", err);
+  }
+}
 
 const SYSTEM_PROMPT = `You are an expert Orlando family vacation planner with 10+ years of local experience. You own vacation rentals in Kissimmee and have helped hundreds of families plan their perfect Orlando trips.
 
@@ -66,6 +98,9 @@ Be specific, actionable, and encouraging. Use emojis sparingly for visual breaks
 export async function POST(request: NextRequest) {
   try {
     const answers = await request.json();
+
+    // Save submission to Supabase (fire and forget - don't block on this)
+    saveSubmission(answers);
 
     // Build the user prompt from answers
     const userPrompt = buildUserPrompt(answers);
